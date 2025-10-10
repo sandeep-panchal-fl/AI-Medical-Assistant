@@ -1,7 +1,6 @@
 from langchain_community.chat_models import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 import yaml
-
 class ReportGeneratorAgent:
 
     def __init__(self):
