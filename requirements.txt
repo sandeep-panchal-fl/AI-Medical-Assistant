@@ -1,0 +1,13 @@
+streamlit
+openai
+python-dotenv
+langchain
+langchain-community
+langgraph
+ollama
+torch
+sentence-transformers
+langchain-chroma
+chromadb
+transformers
+accelerate
