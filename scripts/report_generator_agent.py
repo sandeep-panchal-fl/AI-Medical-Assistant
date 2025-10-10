@@ -1,6 +1,7 @@
 from langchain_community.chat_models import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 import yaml
+
 class ReportGeneratorAgent:
 
     def __init__(self):
@@ -98,63 +99,3 @@ if __name__=="__main__":
 
     resp = obj.generate_final_medical_report(full_chat, chat_summary, retrieved_knowledge)
     print(resp)
-
-
-
-
-
-#     ## Medical Assessment Report – Sandeep
-
-# **Date:** October 26, 2023 (Generated Report)
-
-# **1. PATIENT INFORMATION SECTION**
-
-# *   **Patient Name:** Sandeep (Not specified)
-# *   **Age:** Not specified
-# *   **Gender:** Not specified
-
-# **2. CLINICAL ASSESSMENT SECTION**
-
-# *   **PRESENTING COMPLAINT:**
-#     *   Primary symptom: Throbbing headache.
-#     *   Duration: Not precisely determined, onset not precisely determined.
-#     *   Onset: Acute, coinciding with the initiation of symptoms.
-#     *   Severity: 10/10
-# *   **SYMPTOM ANALYSIS:**
-#     *   Location: Diffusely throughout the head.
-#     *   Character: Throbbing.
-#     *   Severity: 10/10 (HIGH) – Due to the reported intensity.
-#     *   Aggravating/Relieving Factors: Not specified.
-#     *   Associated Symptoms: Nausea, sensitivity to light.
-# *   **SEVERITY FLAGGING LOGIC:**
-#     *   HIGH: Severity â‰¥8
-#     *   MEDIUM: Severity 5-7, multiple symptoms, functional impact
-#     *   LOW: Severity â‰¤4, single mild symptom
-
-# **3. MEDICAL RECOMMENDATIONS SECTION**
-
-# *   **POTENTIAL CONSIDERATIONS:**
-#     *   Differential diagnoses: Migraine, Tension Headache, Cluster Headache (Given the severity and associated symptoms, further investigation is warranted).
-# *   **PRECAUTIONS & SELF-CARE:**
-#     *   Immediate Do’s: Rest in a dark, quiet room.
-#     *   Immediate Don’ts: Avoid strenuous activity.
-#     *   Activity Modifications: Limit physical exertion.
-#     *   Monitoring Advice: Monitor headache frequency, severity, and associated symptoms.
-# *   **TREATMENT SUGGESTIONS:**
-#     *   Medications: (Based on knowledge base - none currently available) Analgesics may be considered for symptomatic relief, but should be used with caution due to the severity.
-#     *   Non-pharmacological approaches: Relaxation techniques, cold compresses.
-#     *   Home remedies: Not specifically recommended at this stage.
-# *   **MEDICAL FOLLOW-UP:**
-#     *   When to seek urgent care: Seek immediate medical attention if headache worsens, develops new neurological symptoms (e.g., weakness, numbness, vision changes), or is unresponsive to initial treatment.
-#     *   Recommended specialist if needed: Neurology consultation is recommended to investigate the etiology of the headache.
-#     *   Timeline for re-evaluation: Within 24-48 hours, or sooner if symptoms worsen.
-
-# **4. KNOWLEDGE & DISCLAIMER SECTION**
-
-# These recommendations are based on generally accepted medical knowledge and the information provided. This report does not constitute a definitive diagnosis. Further evaluation and investigation by a qualified healthcare professional are essential.
-
-# **Disclaimer:** This report is intended for informational purposes only and should not be considered a substitute for professional medical advice. The information presented is based on current medical knowledge and may be subject to change.
-
-# ---
-
-# **Note:** *This report is based solely on the provided clinical summary, retrieved knowledge (none), and conversation context. The lack of retrieved knowledge significantly limits the depth of the assessment and recommendations.*
