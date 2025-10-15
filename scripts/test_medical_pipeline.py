@@ -4,6 +4,7 @@ from conversation_agent import ConversationAgent
 from chat_summary_agent import ChatSummaryAgent
 from report_generator_agent import ReportGeneratorAgent
 from retrieval_agent import MedicalDataRetrieval
+from doctor_validation import SummarizeValidatedReport
 
 class MedicalPipeline:
 
@@ -13,6 +14,7 @@ class MedicalPipeline:
         self.chat_summary = ChatSummaryAgent()
         self.retrieval_data = MedicalDataRetrieval()
         self.report_generator = ReportGeneratorAgent()
+        self.doc_validated_report = SummarizeValidatedReport()
 
         self.session_results = {}  # Store results by session_id
     
@@ -55,7 +57,6 @@ class MedicalPipeline:
             retrieved_data = self.retrieval_data.retrieve_data(final_summary)
 
             print("\nGenerating medical report...")
-            # Generate report (without knowledge base for now)
             medical_report = self.report_generator.generate_final_medical_report(
                 full_chat=full_chat,
                 chat_summary=final_summary,
@@ -74,7 +75,13 @@ class MedicalPipeline:
             print("MEDICAL ASSESSMENT REPORT")
             print("=" * 60)
             print(medical_report)
-            
+
+            print("\n" + "=" * 60)
+            print("STORING DOCTOR VALIDATED MEDICAL REPORT DATA")
+            print("=" * 60)
+
+            self.doc_validated_report.summarize_doctor_validated_report(medical_report)
+
             # Save report to file
             self.save_report_to_file(result)
             
