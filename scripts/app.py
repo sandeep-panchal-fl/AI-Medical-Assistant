@@ -4,6 +4,7 @@ from conversation_agent import ConversationAgent
 from chat_summary_agent import ChatSummaryAgent
 from retrieval_agent import MedicalDataRetrieval
 from report_generator_agent import ReportGeneratorAgent
+from doctor_validation import SummarizeValidatedReport
 
 # Page configuration
 st.set_page_config(
@@ -23,6 +24,8 @@ if 'retrieval_agent' not in st.session_state:
     st.session_state.retrieval_agent = MedicalDataRetrieval()
 if 'report_generator' not in st.session_state:
     st.session_state.report_generator = ReportGeneratorAgent()
+if 'summarize_validated_report' not in st.session_state:
+    st.session_state.summarize_validated_report = SummarizeValidatedReport()
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'conversation_ended' not in st.session_state:
@@ -39,6 +42,14 @@ if 'retrieved_data' not in st.session_state:
     st.session_state.retrieved_data = None
 if 'processing_stage' not in st.session_state:  # NEW: Track current processing stage
     st.session_state.processing_stage = None  # 'summary', 'retrieval', 'report'
+if 'doctor_validated' not in st.session_state:
+    st.session_state.doctor_validated = False
+if 'doctor_action_taken' not in st.session_state:
+        st.session_state.doctor_action_taken = False
+if 'validated_text_ses' not in st.session_state:
+    st.session_state.validated_text_ses = False
+if 'edited_report' not in st.session_state:
+    st.session_state.edited_report = None
 
 # Header
 st.title("🏥 AI Medical Assistant")
@@ -61,6 +72,10 @@ with st.sidebar:
     if st.button("🔄 Start New Conversation", use_container_width=True):
         st.session_state.session_id = str(uuid.uuid4())
         st.session_state.conversation_agent = ConversationAgent()
+        st.session_state.summary_agent = ChatSummaryAgent()
+        st.session_state.retrieval_agent = MedicalDataRetrieval()
+        st.session_state.report_generator = ReportGeneratorAgent()
+        st.session_state.summarize_validated_report = SummarizeValidatedReport()
         st.session_state.messages = []
         st.session_state.conversation_ended = False
         st.session_state.chat_summary = None
@@ -69,6 +84,10 @@ with st.sidebar:
         st.session_state.report_generated = False
         st.session_state.retrieved_data = None
         st.session_state.processing_stage = None
+        st.session_state.doctor_validated = False
+        st.session_state.doctor_action_taken = False
+        st.session_state.validated_text_ses = False
+        st.session_state.edited_report = None
         st.rerun()
 
     st.markdown("---")
@@ -105,6 +124,14 @@ with st.sidebar:
         st.success("✅ Medical Report Generated")
     else:
         st.info("⏳ Medical Report Pending")
+
+    # Doctor validation
+    if st.session_state.processing_stage == 'doctor_validation_stage':
+        st.warning("🏥 Doctor Validation In-Progress ...")
+    elif st.session_state.doctor_validated:
+        st.success("✅ Medical Validation Completed")
+    else:
+        st.info("⏳ Doctor Validation Pending")
 
     # Session info
     st.markdown("---")
@@ -206,8 +233,8 @@ if st.session_state.processing_stage == 'report':
 
         st.session_state.medical_report = medical_report
         st.session_state.report_generated = True
-        st.session_state.processing_stage = None
 
+        st.session_state.processing_stage = 'doctor_validation_stage'
         print("st.session_state.medical_report", st.session_state.medical_report)
 
         # Final rerun to show everything
@@ -263,6 +290,65 @@ with st.expander("📊 Conversation Details"):
 if st.session_state.medical_report:
     with st.expander("📜 View Full Chat"):
         st.json(st.session_state.full_chat)
+
+# After report generation
+if st.session_state.medical_report:
+    st.markdown("---")
+    st.subheader("🩺 Doctor Validation")
+
+    st.markdown("""
+    Review the generated report below.  
+    You can make changes to the diagnosis, medicines, or treatment if necessary.
+    """)
+
+    # Disable once validated
+    text_area_disabled = st.session_state.doctor_action_taken
+    button_disabled = st.session_state.doctor_action_taken
+    
+    if not text_area_disabled:
+        display_report = st.session_state.medical_report
+    else:
+        display_report = st.session_state.edited_report
+
+    validated_text = st.text_area(
+        "Edit or Validate Report",
+        display_report,
+        height=300,
+        key="doctor_validation_area",
+        disabled=text_area_disabled
+    )
+
+    st.session_state.edited_report = validated_text.strip()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("✅ Validate & Save", use_container_width=True, disabled=button_disabled):
+            with st.spinner("Checking doctor modifications...", show_time=True):
+
+                if st.session_state.edited_report != st.session_state.medical_report.strip():
+                    st.session_state.summarize_validated_report.summarize_doctor_validated_report(st.session_state.edited_report)
+                    st.success("✅ Doctor-modified report saved")
+                else:
+                    st.info("🟡 No modifications detected — skipping storage.")
+
+                st.session_state.processing_stage = None
+                st.session_state.doctor_validated = True
+                st.session_state.doctor_action_taken = True
+                st.rerun()
+
+    with col2:
+        if st.button("🚫 No Modification", use_container_width=True, disabled=button_disabled):
+            st.info("🟡 No modifications done by doctor — skipping storage.")
+            st.session_state.processing_stage = None
+            st.session_state.doctor_validated = True
+            st.session_state.doctor_action_taken = True
+            st.rerun()
+
+    # 🔒 After doctor action, show message and keep section visible but locked
+    if st.session_state.doctor_action_taken:
+        st.markdown("### 🔒 Report locked after doctor validation.")
+        st.markdown("You can view but not modify the report now.")
 
 # Footer
 st.markdown("---")

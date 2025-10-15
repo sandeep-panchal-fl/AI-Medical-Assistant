@@ -3,6 +3,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain.docstore.document import Document
+import re
+from datetime import datetime
 
 class MedicalDataStore:
     
@@ -26,6 +28,7 @@ class MedicalDataStore:
             chunk_overlap=200
         )
 
+    #  Store actual data in knowledgebase
     def store_in_vectordb(self, csv_path: str):
 
         """
@@ -42,7 +45,10 @@ class MedicalDataStore:
         # Convert to LangChain Document objects
         documents = []
         for _, row in df.iterrows():
-            metadata = {"disease": row["disease"]}
+            metadata = {
+                "disease": row["disease"],
+                "source": "original_data"
+                }
             doc = Document(page_content=row["combined_text"], metadata=metadata)
             documents.append(doc)
 
@@ -54,8 +60,43 @@ class MedicalDataStore:
 
         # Add to vector DB
         self.vector_store.add_documents(chunks)
+        print(f" === Collection count - {self.vector_store._collection.count()} ===")
         # self.vector_store.persist()
         # print(f"💾 Data persisted to {self.vector_store._persist_directory}")
+
+    #  Human-Validated Report Ingestion
+    def store_validated_report(self, formatted_output: str):
+
+        """Extract disease name + format text + add to vector DB."""
+
+        # Step 1: Extract disease name
+        match = re.search(r"Disease:\s*(.*?)\s*\|", formatted_output)
+        disease_name = match.group(1).strip() if match else "Unknown"
+        
+        # --- Step 2: Create metadata ---
+        metadata = {
+            "disease": disease_name,
+            "validated_by": "Doctor",
+            "validation_date": datetime.now().isoformat(),
+            "source": "doctor_validated"
+        }
+
+        print(f"== Disease Extracted: {disease_name}")
+        print(f"== Formatted Report Summry: {formatted_output}")
+
+        document = Document(page_content=formatted_output, metadata=metadata)
+        chunks = self.splitter.split_documents([document])
+
+        collection_cnt = {}
+        collection_cnt["before_adding"] = self.vector_store._collection.count()
+
+        # Add to Vector DB
+        self.vector_store.add_documents(chunks)
+
+        print(f"💾 Stored validated report for disease: {disease_name} ({len(chunks)} chunks)")
+        collection_cnt["after_adding"] = self.vector_store._collection.count()
+
+        return collection_cnt
 
     def similarity_search(self, query: str, k: int = 3):
         """
